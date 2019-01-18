@@ -3,10 +3,60 @@
   <head>
     <meta charset="UTF-8">
     <title>Hello World!</title>
+    <style>
+        html, body {
+          height:100%;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+        }
+
+        img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .thumbnails>div{
+          width: 120px;
+          padding: 3px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        #fileinfo{
+          margin: 0;
+        }
+
+        .btn:hover {
+          cursor: pointer;
+        }
+
+        .download-btn {
+          width: 20px;
+          height: 20px;
+          margin: 2px;
+        }
+
+    </style>
   </head>
   <body>
-    <h1>Hello World!</h1>
-    <div class="gallery"></div>
+    <div class="gallery" style="height:100%; background-color: #333333;display: flex; justify-content: space-around; align-items: center;">
+      <div>
+        <img id="detail"/>
+      </div>
+    </div>
+    <div style="position:absolute; overflow: hidden; padding: 2px; height: 24px; width:100%; top:0; background-color: white; display: flex; opacity: 0.3;">
+      <h3 id="fileinfo">No file opened</h3>
+      <div style="flex-grow: 1;"></div>
+      <div class="btn download-btn"><img src="./download.svg"/></div>
+    </div>
+    <div style="position:absolute; overflow: hidden;height: 120px; width:100%; bottom:0; background-color: rgba(255,255,255,0.3); display: flex; justify-content: space-around;">
+      <div class="thumbnails" style="flex-grow: 1; display: flex;"></div>
+      <div class="btn next-btn" style="width:80px; display: flex; justify-content: space-around; align-items: center">
+        <img src='./next.png'/>
+      </div>
+    </div>
     <script>
       // You can also require other files to run in this process
       require('./renderer.js')

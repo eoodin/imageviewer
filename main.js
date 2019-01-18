@@ -2,6 +2,8 @@
 
 const { app, BrowserWindow, Menu, dialog } = require('electron')
 const fs = require('fs');
+const request = require('request');
+const crypto = require('crypto');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -9,12 +11,12 @@ let mainWindow
 
 function createWindow() {
   // Create the browser window.
-  mainWindow = new BrowserWindow({ width: 800, height: 600 })
+  mainWindow = new BrowserWindow({ width: 1200, height: 900 })
 
   // and load the index.html of the app.
   mainWindow.loadFile('index.html')
   
-  // mainWindow.webContents.session.setProxy({proxyRules:"http://87.254.212.120:8080"}, function () {});
+  //mainWindow.webContents.session.setProxy({proxyRules:"socks5://localhost:1086"}, function () {});
   
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     {
@@ -42,7 +44,7 @@ function createWindow() {
   ]));
 
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools()
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
@@ -127,4 +129,28 @@ app.on('load-urls', arg => {
       app.emit('url-added', urlFile.next().value);
     }
   }
+})
+
+let md5digester = crypto.createHash('md5');
+let downloadFolder = '';
+
+function save(url) {
+  console.log('saving url', url);
+  let ext = url.split('.').pop()
+  let name = md5digester.update(url).digest('hex');
+  let filename = downloadFolder + '/' + name + '.' + ext;
+  request(url).pipe(fs.createWriteStream(filename));
+  console.log('saving started.');
+}
+
+app.on('save-url', args => {
+  let {url} = args;
+  if (!downloadFolder) {
+    dialog.showOpenDialog({ properties: ['openDirectory'] }, folders => {
+      downloadFolder = folders[0];
+      save(url);
+    });
+    return;
+  }
+  save(url);
 })
