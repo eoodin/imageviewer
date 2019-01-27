@@ -23,8 +23,8 @@ let thumbDiv = document.querySelector('.thumbnails');
 let fileInfo = document.getElementById('fileinfo');
 let downBtn = document.querySelector('.download-btn');
 
-remote.app.on('url-added', url => {
-    pos++;
+remote.app.on('url-added', arg => {
+    pos = arg.index;
     if(picDivs.length >= urlCount) {
         let s = picDivs.shift();
         s.remove()
@@ -32,7 +32,7 @@ remote.app.on('url-added', url => {
     
     let c = document.createElement('div');
     c.addEventListener('click', thumbnailClicked)
-    c.innerHTML = "<div><img src=\"" + url + "\" /></div>";
+    c.innerHTML = "<div><img src=\"" + arg.url + "\" /></div>";
     if (picDivs.length >= thumbnailCount) {
         picDivs[thumbnailCount - 1].style.display = "";
         c.style = "display: none;"
@@ -45,6 +45,10 @@ remote.app.on('url-added', url => {
 
 document.querySelector('.next-btn').addEventListener('click', e => {
     remote.app.emit('load-urls', {size: thumbnailCount})
+})
+
+document.querySelector('.skip-btn').addEventListener('click', e => {
+    remote.app.emit('skip-urls', 1000)
 })
 
 downBtn.addEventListener('click', e => {

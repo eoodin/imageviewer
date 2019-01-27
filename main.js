@@ -89,7 +89,7 @@ function* lineReader(filename) {
   let left = 0;
   try {
     while (position < fileSize) {
-      position += fs.readSync(fd, readChunk, left, bufferSize, position);
+      position += fs.readSync(fd, readChunk, left, bufferSize - left, position);
       lines = readChunk.toString().split('\n');
       for (let i = 0; i < lines.length - 1; ++i) {
         yield lines[i];
@@ -102,7 +102,7 @@ function* lineReader(filename) {
       yield readChunk.slice(0, left).toString()
     }
   } catch (e) {
-    console.log('exception caught')
+    console.log('exception caught', e)
     fs.closeSync(fd);
     return;
   }
@@ -112,6 +112,7 @@ function* lineReader(filename) {
 
 var urlFile;
 
+var pos = 0;
 app.on('open-url-file', f => {
   if (urlFile) {
     urlFile.throw('close');
@@ -119,14 +120,31 @@ app.on('open-url-file', f => {
 
   urlFile = lineReader(f);
   app.emit('url-file-opened', f);
+  pos = 0;
 });
+
+app.on('skip-urls', count => {
+  // TODO: parameterize '16'.
+  if (!urlFile || count < 16)  {
+    return;
+  }
+  pos += count - 16;
+  for(let i = 0; i < count - 16; i++) {
+    urlFile.next();
+  }
+
+  for(let i = 0; i < 16; i++) {
+    pos++;
+    app.emit('url-added', {index: pos, url: urlFile.next().value});
+  }
+})
 
 app.on('load-urls', arg => {
   let {size = 10} = arg;
-
   if (urlFile) {
     for (let i = 0; i < size; ++i) {
-      app.emit('url-added', urlFile.next().value);
+      pos++;
+      app.emit('url-added', {index: pos, url: urlFile.next().value});
     }
   }
 })
@@ -135,12 +153,10 @@ let md5digester = crypto.createHash('md5');
 let downloadFolder = '';
 
 function save(url) {
-  console.log('saving url', url);
   let ext = url.split('.').pop()
   let name = md5digester.update(url).digest('hex');
   let filename = downloadFolder + '/' + name + '.' + ext;
   request(url).pipe(fs.createWriteStream(filename));
-  console.log('saving started.');
 }
 
 app.on('save-url', args => {
